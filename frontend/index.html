@@ -1,15 +1,24 @@
 <!DOCTYPE html>
 <html>
-<head><title>Book Catalog</title></head>
+<head>
+  <title>Book Catalog</title>
+</head>
 <body>
   <h1>Book Catalog</h1>
   <form id="book-form">
-    <input type="text" id="title" placeholder="Title" required />
-    <input type="text" id="author" placeholder="Author" required />
-    <textarea id="desc" placeholder="Description"></textarea>
+    <input id="title" placeholder="Title" required>
+    <input id="author" placeholder="Author" required>
+    <input id="desc" placeholder="Description">
     <button type="submit">Add Book</button>
   </form>
+
+  <h2>Search</h2>
+  <input id="search" placeholder="Enter title to search">
+  <button onclick="searchBook()">Search</button>
+
   <ul id="book-list"></ul>
+
   <script src="script.js"></script>
 </body>
 </html>
+
