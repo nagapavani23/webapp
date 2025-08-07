@@ -42,26 +42,28 @@ pipeline {
             }
         }
 
-        stage('Login to Azure & Configure AKS Access') {
-            steps {
-                withCredentials([string(credentialsId: 'azure-sp-sdk-auth', variable: 'AZURE_CRED')]) {
-  sh '''
-    echo "$AZURE_CRED" > azure.json
+       stage('Login to Azure & Configure AKS Access') {
+    steps {
+        withCredentials([string(credentialsId: 'azure-sp-sdk-auth', variable: 'AZURE_CRED')]) {
+            sh '''
+                echo "$AZURE_CRED" > azure.json
 
-    clientId=$(jq -r .clientId azure.json)
-    clientSecret=$(jq -r .clientSecret azure.json)
-    tenantId=$(jq -r .tenantId azure.json)
+                clientId=$(jq -r .clientId azure.json)
+                clientSecret=$(jq -r .clientSecret azure.json)
+                tenantId=$(jq -r .tenantId azure.json)
 
-    az login --service-principal \
-             --username "$clientId" \
-             --password "$clientSecret" \
-             --tenant "$tenantId"
-  '''
+                az login --service-principal \
+                         --username "$clientId" \
+                         --password "$clientSecret" \
+                         --tenant "$tenantId"
+
+                # Optional: Configure AKS context (replace with your actual values)
+                az aks get-credentials --resource-group pavani --name webapp
+            '''
+        }
+    }
 }
 
-
-            }
-        }
 
         stage('Deploy to AKS') {
             steps {
