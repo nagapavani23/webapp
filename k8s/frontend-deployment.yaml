@@ -15,6 +15,7 @@ spec:
       containers:
       - name: frontend
         image: nagapavani2301/book-frontend
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
 ---
