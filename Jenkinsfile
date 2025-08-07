@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch:'main', credentials Id:'github-creds',url:'https://github.com/nagapavani23'
             }
         }
 
