@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: your-dockerhub-username/book-backend
+        image: nagapavani2301/book-backend
         ports:
         - containerPort: 8000
 ---
