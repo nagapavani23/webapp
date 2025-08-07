@@ -44,21 +44,21 @@ pipeline {
 
         stage('Login to Azure & Configure AKS Access') {
             steps {
-                withCredentials([file(credentialsId: 'azure-sp-sdk-auth', variable: 'AZURE_CRED_FILE')]) {
+                withCredentials([string(credentialsId: 'azure-sp-sdk-auth', variable: 'AZURE_CRED')]) {
   sh '''
-    echo "Logging into Azure using service principal"
-    clientId=$(jq -r .clientId $AZURE_CRED_FILE)
-    clientSecret=$(jq -r .clientSecret $AZURE_CRED_FILE)
-    tenantId=$(jq -r .tenantId $AZURE_CRED_FILE)
+    echo "$AZURE_CRED" > azure.json
+
+    clientId=$(jq -r .clientId azure.json)
+    clientSecret=$(jq -r .clientSecret azure.json)
+    tenantId=$(jq -r .tenantId azure.json)
 
     az login --service-principal \
              --username "$clientId" \
              --password "$clientSecret" \
              --tenant "$tenantId"
-
-    az aks get-credentials --resource-group pavani --name webapp
   '''
 }
+
 
             }
         }
