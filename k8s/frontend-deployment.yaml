@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: your-dockerhub-username/book-frontend
+        image: nagapavani2301/book-frontend
         ports:
         - containerPort: 80
 ---
