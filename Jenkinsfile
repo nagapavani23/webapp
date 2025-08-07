@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', credentialsId: 'github-creds', url: 'https://github.com/nagapavani23/book-catalog-app.git'
+                git branch: 'main', credentialsId: 'github-creds', url: 'https://github.com/nagapavani23/webapp.git'
             }
         }
 
