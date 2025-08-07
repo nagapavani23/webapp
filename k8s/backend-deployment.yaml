@@ -15,6 +15,7 @@ spec:
       containers:
       - name: backend
         image: nagapavani2301/book-backend
+        imagePullPolicy: Always
         ports:
         - containerPort: 8000
 ---
