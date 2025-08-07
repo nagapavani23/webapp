@@ -2,15 +2,15 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_USER = credentials('dockerhub-creds')
-        BACKEND_IMAGE = "${DOCKER_HUB_USER_USR}/book-backend"
-        FRONTEND_IMAGE = "${DOCKER_HUB_USER_USR}/book-frontend"
+        DOCKER_HUB_CREDS = credentials('dockerhub-creds')
+        BACKEND_IMAGE = "${DOCKER_HUB_CREDS_USR}/book-backend"
+        FRONTEND_IMAGE = "${DOCKER_HUB_CREDS_USR}/book-frontend"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch:'main', credentialsId:'github-creds',url:'https://github.com/nagapavani23'
+                git branch: 'main', credentialsId: 'github-creds', url: 'https://github.com/nagapavani23/book-catalog-app.git'
             }
         }
 
@@ -30,7 +30,7 @@ pipeline {
             }
         }
 
-        stage('Push Images to DockerHub') {
+        stage('Push Docker Images to DockerHub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh """
@@ -42,22 +42,37 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Login to Azure & Configure AKS Access') {
             steps {
-                sh """
+                withCredentials([string(credentialsId: 'azure-sp-sdk-auth', variable: 'AZURE_CRED')]) {
+                    sh '''
+                        echo "$AZURE_CRED" > azure.json
+                        az login --service-principal --sdk-auth --username $(jq -r .clientId azure.json) \
+                                 --password $(jq -r .clientSecret azure.json) \
+                                 --tenant $(jq -r .tenantId azure.json)
+
+                        az aks get-credentials --resource-group <RESOURCE_GROUP_NAME> --name <AKS_CLUSTER_NAME> --overwrite-existing
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to AKS') {
+            steps {
+                sh '''
                     kubectl apply -f k8s/backend-deployment.yaml
                     kubectl apply -f k8s/frontend-deployment.yaml
-                """
+                '''
             }
         }
     }
 
     post {
         success {
-            echo "Deployment successful ✅"
+            echo "✅ Successfully deployed to AKS!"
         }
         failure {
-            echo "Deployment failed ❌"
+            echo "❌ Deployment to AKS failed."
         }
     }
 }
