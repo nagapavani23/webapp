@@ -44,7 +44,7 @@ pipeline {
 
         stage('Login to Azure & Configure AKS Access') {
             steps {
-                withCredentials([file(credentialsId: 'AZURE_CRED', variable: 'AZURE_CRED_FILE')]) {
+                withCredentials([file(credentialsId: 'azure-sp-sdk-auth', variable: 'AZURE_CRED_FILE')]) {
   sh '''
     echo "Logging into Azure using service principal"
     clientId=$(jq -r .clientId $AZURE_CRED_FILE)
