@@ -3,8 +3,9 @@ pipeline {
 
     environment {
         DOCKER_HUB_CREDS = credentials('dockerhub-creds')
-        BACKEND_IMAGE = "${DOCKER_HUB_CREDS_USR}/book-backend"
-        FRONTEND_IMAGE = "${DOCKER_HUB_CREDS_USR}/book-frontend"
+        BUILD_TAG = "${env.BUILD_NUMBER}"
+        BACKEND_IMAGE = "${DOCKER_HUB_CREDS_USR}/book-backend:${BUILD_TAG}"
+        FRONTEND_IMAGE = "${DOCKER_HUB_CREDS_USR}/book-frontend:${BUILD_TAG}"
     }
 
     stages {
@@ -42,28 +43,35 @@ pipeline {
             }
         }
 
-       stage('Login to Azure & Configure AKS Access') {
-    steps {
-        withCredentials([string(credentialsId: 'azure-sp-sdk-auth', variable: 'AZURE_CRED')]) {
-            sh '''
-                echo "$AZURE_CRED" > azure.json
+        stage('Login to Azure & Configure AKS Access') {
+            steps {
+                withCredentials([string(credentialsId: 'azure-sp-sdk-auth', variable: 'AZURE_CRED')]) {
+                    sh '''
+                        echo "$AZURE_CRED" > azure.json
 
-                clientId=$(jq -r .clientId azure.json)
-                clientSecret=$(jq -r .clientSecret azure.json)
-                tenantId=$(jq -r .tenantId azure.json)
+                        clientId=$(jq -r .clientId azure.json)
+                        clientSecret=$(jq -r .clientSecret azure.json)
+                        tenantId=$(jq -r .tenantId azure.json)
 
-                az login --service-principal \
-                         --username "$clientId" \
-                         --password "$clientSecret" \
-                         --tenant "$tenantId"
+                        az login --service-principal \
+                                 --username "$clientId" \
+                                 --password "$clientSecret" \
+                                 --tenant "$tenantId"
 
-                # Optional: Configure AKS context (replace with your actual values)
-                az aks get-credentials --resource-group pavani --name webapp
-            '''
+                        az aks get-credentials --resource-group pavani --name webapp
+                    '''
+                }
+            }
         }
-    }
-}
 
+        stage('Update Image Tags in Kubernetes Manifests') {
+            steps {
+                sh """
+                    sed -i 's|image: .*/book-backend:.*|image: ${BACKEND_IMAGE}|' k8s/backend-deployment.yaml
+                    sed -i 's|image: .*/book-frontend:.*|image: ${FRONTEND_IMAGE}|' k8s/frontend-deployment.yaml
+                """
+            }
+        }
 
         stage('Deploy to AKS') {
             steps {
@@ -77,7 +85,7 @@ pipeline {
 
     post {
         success {
-            echo "✅ Successfully deployed to AKS!"
+            echo "✅ Successfully deployed to AKS with Build Tag: ${BUILD_TAG}"
         }
         failure {
             echo "❌ Deployment to AKS failed."
