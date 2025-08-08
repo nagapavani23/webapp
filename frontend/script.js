@@ -1,11 +1,16 @@
-const API_URL = "http://localhost:8000/books"; // Change to backend service URL in Kubernetes
+// Use injected global variable or fallback to localhost for local dev
+const API_URL = (typeof API_URL_PLACEHOLDER !== 'undefined' && API_URL_PLACEHOLDER !== '__API_URL__')
+                ? API_URL_PLACEHOLDER
+                : 'http://localhost:8000';
+
+const BOOKS_ENDPOINT = API_URL.endsWith('/books') ? API_URL : API_URL + '/books';
 
 const bookForm = document.getElementById("book-form");
 const bookList = document.getElementById("book-list");
 
 // Fetch books and display
 async function fetchBooks() {
-    const res = await fetch(API_URL);
+    const res = await fetch(BOOKS_ENDPOINT);
     const books = await res.json();
     bookList.innerHTML = "";
     books.forEach(book => {
@@ -23,7 +28,7 @@ bookForm.addEventListener("submit", async (e) => {
     const author = document.getElementById("author").value;
     const desc = document.getElementById("desc").value;
 
-    await fetch(API_URL, {
+    await fetch(BOOKS_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, author, description: desc })
@@ -35,7 +40,7 @@ bookForm.addEventListener("submit", async (e) => {
 
 // Delete book
 async function deleteBook(id) {
-    await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+    await fetch(`${BOOKS_ENDPOINT}/${id}`, { method: "DELETE" });
     fetchBooks();
 }
 
