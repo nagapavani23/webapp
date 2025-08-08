@@ -5,20 +5,17 @@
 </head>
 <body>
   <h1>Book Catalog</h1>
+  
   <form id="book-form">
-    <input id="title" placeholder="Title" required>
-    <input id="author" placeholder="Author" required>
-    <input id="desc" placeholder="Description">
+    <input type="text" id="title" placeholder="Title" required />
+    <input type="text" id="author" placeholder="Author" required />
+    <textarea id="desc" placeholder="Description"></textarea>
     <button type="submit">Add Book</button>
   </form>
-
-  <h2>Search</h2>
-  <input id="search" placeholder="Enter title to search">
-  <button onclick="searchBook()">Search</button>
-
+  
+  <h2>Book List</h2>
   <ul id="book-list"></ul>
 
   <script src="script.js"></script>
 </body>
 </html>
-
