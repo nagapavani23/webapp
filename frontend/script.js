@@ -1,49 +1,43 @@
-const form = document.getElementById("book-form");
+const API_URL = "http://localhost:8000/books"; // Change to backend service URL in Kubernetes
 
-form.onsubmit = async (e) => {
-  e.preventDefault();
+const bookForm = document.getElementById("book-form");
+const bookList = document.getElementById("book-list");
 
-  const title = document.getElementById("title").value;
-  const author = document.getElementById("author").value;
-  const desc = document.getElementById("desc").value;
-
-  await fetch("http://localhost:8000/books", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, author, description: desc })
-  });
-
-  form.reset();  // Clear form
-  loadBooks();   // Reload book list
-};
-
-async function loadBooks() {
-  const res = await fetch("http://localhost:8000/books");
-  const books = await res.json();
-
-  const list = document.getElementById("book-list");
-  list.innerHTML = "";
-
-  books.forEach(book => {
-    const li = document.createElement("li");
-    li.textContent = `${book.title} by ${book.author}`;
-    list.appendChild(li);
-  });
+// Fetch books and display
+async function fetchBooks() {
+    const res = await fetch(API_URL);
+    const books = await res.json();
+    bookList.innerHTML = "";
+    books.forEach(book => {
+        const li = document.createElement("li");
+        li.innerHTML = `<b>${book.title}</b> by ${book.author} - ${book.description}
+                        <button onclick="deleteBook('${book.id}')">Delete</button>`;
+        bookList.appendChild(li);
+    });
 }
 
-async function searchBook() {
-  const title = document.getElementById("search").value;
-  const res = await fetch(`http://localhost:8000/books/search/${title}`);
-  const books = await res.json();
+// Add book
+bookForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const title = document.getElementById("title").value;
+    const author = document.getElementById("author").value;
+    const desc = document.getElementById("desc").value;
 
-  const list = document.getElementById("book-list");
-  list.innerHTML = "";
+    await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, author, description: desc })
+    });
 
-  books.forEach(book => {
-    const li = document.createElement("li");
-    li.textContent = `${book.title} by ${book.author}`;
-    list.appendChild(li);
-  });
+    bookForm.reset();
+    fetchBooks();
+});
+
+// Delete book
+async function deleteBook(id) {
+    await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+    fetchBooks();
 }
 
-loadBooks();  // initial load
+// Initial load
+fetchBooks();
