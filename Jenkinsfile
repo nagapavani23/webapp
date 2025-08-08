@@ -9,7 +9,6 @@ pipeline {
     BUILD_TAG = "${env.BUILD_NUMBER}"
     BACKEND_IMAGE = "${REGISTRY}/book-backend:${BUILD_TAG}"
     FRONTEND_IMAGE = "${REGISTRY}/book-frontend:${BUILD_TAG}"
-    // The service name of your backend inside k8s (used by frontend)
     BACKEND_SVC_URL = "http://backend-service:8000"
   }
 
@@ -43,7 +42,6 @@ pipeline {
 
     stage('Prepare Frontend (inject API URL)') {
       steps {
-        // Replace placeholder __API_URL__ in index.html with cluster service URL before building
         sh """
           if grep -q '__API_URL__' frontend/index.html; then
             cp -v frontend/index.html frontend/index.html.bak
@@ -83,21 +81,29 @@ pipeline {
             clientSecret=$(jq -r .clientSecret azure.json)
             tenantId=$(jq -r .tenantId azure.json)
             az login --service-principal --username "$clientId" --password "$clientSecret" --tenant "$tenantId"
-            # Replace resource-group and cluster name with your values if different
             az aks get-credentials --resource-group pavani --name webapp --overwrite-existing
           '''
         }
       }
     }
 
+    stage('Deploy Kubernetes manifests') {
+      steps {
+        sh """
+          kubectl apply -f k8s/backend-deployment.yaml
+      
+          kubectl apply -f k8s/frontend-deployment.yaml
+          
+        """
+      }
+    }
+
     stage('Deploy: Update Images in AKS') {
       steps {
         sh """
-          # Update backend image
           kubectl set image deployment/backend backend=${BACKEND_IMAGE} --record
           kubectl rollout status deployment/backend --timeout=120s
 
-          # Update frontend image
           kubectl set image deployment/frontend frontend=${FRONTEND_IMAGE} --record
           kubectl rollout status deployment/frontend --timeout=120s
         """
